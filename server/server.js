@@ -6,8 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect("mongodb://127.0.0.1:27017/bikesHub")
-.then(() => console.log("MongoDB Connected"))
+mongoose.connect("mongodb+srv://aatikabilal0_db_user:03039297530a@cluster0.txrfrly.mongodb.net/bikesHub?retryWrites=true&w=majority").then(() => console.log("MongoDB Connected"))
 .catch(err => console.log(err));
 
 const Bike = mongoose.model("Bike", new mongoose.Schema({}, { strict: false }));
