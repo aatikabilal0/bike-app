@@ -6,15 +6,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ FIX 1: ENV VARIABLE use karo
+// MongoDB
 mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("MongoDB Connected"))
-.catch(err => console.log(err));
+  .then(() => console.log("MongoDB Connected"))
+  .catch(err => console.log(err));
 
-// schema
+// Schema
 const Bike = mongoose.model("Bike", new mongoose.Schema({}, { strict: false }));
 
-// routes
+// ✅ ROOT ROUTE (VERY IMPORTANT)
+app.get("/", (req, res) => {
+  res.send("API is working 🚀");
+});
+
+// POST
 app.post("/api/bikes", async (req, res) => {
   try {
     const bike = new Bike(req.body);
@@ -25,6 +30,7 @@ app.post("/api/bikes", async (req, res) => {
   }
 });
 
+// GET
 app.get("/api/bikes", async (req, res) => {
   try {
     const bikes = await Bike.find().sort({ _id: -1 });
@@ -34,6 +40,7 @@ app.get("/api/bikes", async (req, res) => {
   }
 });
 
+// DELETE
 app.delete("/api/bikes/:id", async (req, res) => {
   try {
     await Bike.findByIdAndDelete(req.params.id);
@@ -43,10 +50,7 @@ app.delete("/api/bikes/:id", async (req, res) => {
   }
 });
 
-// ✅ FIX 2: Railway PORT use karo
+// ✅ PORT FIX (MAIN ISSUE)
 const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log("Server running on", PORT);
-});
+app.listen(PORT, () => console.log("Server running on", PORT));
 // redeploy 123
