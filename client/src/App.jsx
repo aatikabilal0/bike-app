@@ -14,6 +14,16 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString("en-PK") : "-";
 
 const F = { heading: "'Libre Baskerville', serif", body: "'Josefin Sans', sans-serif" };
 const C = { primary: "#1b4332", accent: "#2d6a4f", light: "#f0fdf4", border: "#d1fae5" };
+const EMPTY_PURCHASE_FORM = {
+  recordType: "purchase", date: "", bikeNumber: "", customerName: "", customerCnic: "", customerAddress: "",
+  bikeName: "", cc: "", bikeModel: "", engineNumber: "", chassisNumber: "",
+  totalPrice: "", amountPaid: "", remainingAmount: ""
+};
+const EMPTY_SALE_FORM = {
+  recordType: "sale", date: "", bikeNumber: "", customerName: "", customerCnic: "", customerAddress: "",
+  bikeName: "", cc: "", bikeModel: "", engineNumber: "", chassisNumber: "",
+  totalPrice: "", receivedAmount: "", remainingAmount: ""
+};
 
 function Navbar({ page, setPage, isLoggedIn, onLogout }) {
   return (
@@ -31,9 +41,11 @@ function Navbar({ page, setPage, isLoggedIn, onLogout }) {
         {isLoggedIn && [
           ["dashboard", "Dashboard"],
           ["bikes", "Inventory"],
-          ["plates", "Plates"],
+          ["plates", "Registration"],
           ["expenses", "Expenses"],
-        ].map(([pg, label]) => (
+        ].map(([pg, label
+          
+        ]) => (
           <span key={pg} onClick={() => setPage(pg)} style={{ padding: "6px 14px", borderRadius: 6, cursor: "pointer", fontFamily: F.body, fontSize: 13, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", color: page === pg ? C.accent : "#64748b", background: page === pg ? C.light : "transparent" }}>
             {label}
           </span>
@@ -169,16 +181,14 @@ function DashboardPage() {
   if (loading) return <div style={{ textAlign: "center", padding: 60, fontFamily: F.body, color: "#64748b" }}>Loading stats...</div>;
   if (!stats) return <div style={{ padding: 40, textAlign: "center", color: "#ef4444" }}>Could not load stats.</div>;
   const cards = [
-    { label: "Total Bikes", value: stats.totalBikes, icon: "🏍️", color: "#3b82f6" },
-    { label: "Sold Bikes", value: stats.soldBikes, icon: "✅", color: "#10b981" },
-    { label: "In Stock", value: stats.inStock, icon: "📦", color: "#f59e0b" },
-    { label: "Total Plates", value: stats.totalPlates, icon: "📋", color: "#8b5cf6" },
-    { label: "Total Revenue", value: formatPKR(stats.totalRevenue), icon: "💰", color: "#10b981" },
+    { label: "Total Investment", value: formatPKR(stats.totalInvestment), icon: "💰", color: "#3b82f6" },
+    { label: "Total Sale", value: formatPKR(stats.totalSale), icon: "✅", color: "#10b981" },
     { label: "Total Expenses", value: formatPKR(stats.totalExpenses), icon: "💸", color: "#ef4444" },
     { label: "Bike Profit", value: formatPKR(stats.bikeProfit), icon: "📈", color: C.accent },
     { label: "Plate Profit", value: formatPKR(stats.plateProfit), icon: "🏷️", color: "#8b5cf6" },
     { label: "Net Profit", value: formatPKR(stats.netProfit), icon: stats.netProfit >= 0 ? "🟢" : "🔴", color: stats.netProfit >= 0 ? "#10b981" : "#ef4444" },
   ];
+
   return (
     <div style={{ padding: "32px 40px", maxWidth: 1400, margin: "0 auto", fontFamily: F.body }}>
       <h1 style={{ fontFamily: F.heading, fontSize: 28, color: C.primary, marginBottom: 4, marginTop: 0 }}>📊 Dashboard</h1>
@@ -192,13 +202,12 @@ function DashboardPage() {
           </div>
         ))}
       </div>
-      <div style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, maxWidth: 480 }}>
+      <div style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, maxWidth: 520 }}>
         <h3 style={{ fontFamily: F.heading, marginTop: 0, marginBottom: 16, color: C.primary }}>Profit Summary</h3>
         {[
-          ["Bike Sales Revenue", formatPKR(stats.totalRevenue), "#10b981", false],
-          ["Purchase Cost", `- ${formatPKR(stats.totalPurchase)}`, "#ef4444", false],
-          ["Repair Cost", `- ${formatPKR(stats.totalRepair)}`, "#ef4444", false],
-          ["Other Expenses", `- ${formatPKR(stats.totalExpenses)}`, "#ef4444", false],
+          ["Total Sale", formatPKR(stats.totalSale), "#10b981", false],
+          ["Total Purchase (Investment)", `- ${formatPKR(stats.totalPurchase)}`, "#ef4444", false],
+          ["Total Expenses", `- ${formatPKR(stats.totalExpenses)}`, "#ef4444", false],
           ["Plate Profit", `+ ${formatPKR(stats.plateProfit)}`, "#10b981", false],
           ["NET PROFIT", formatPKR(stats.netProfit), stats.netProfit >= 0 ? "#10b981" : "#ef4444", true],
         ].map(([label, val, color, bold], i) => (
@@ -207,132 +216,139 @@ function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {Array.isArray(stats.breakdown) && stats.breakdown.length > 0 && (
+        <div style={{ marginTop: 18, overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+            <thead>
+              <tr style={{ background: C.primary }}>
+                {[
+                  "Bike Name",
+                  "Stock (InStock)",
+                  "Sold",
+                  "Purchase Total",
+                  "Sale Total",
+                  "Allocated Expense",
+                  "Profit/Loss",
+                ].map((h) => (
+                  <th key={h} style={{ padding: "12px 14px", color: "#fff", fontSize: 11, fontWeight: 700, textAlign: "left", whiteSpace: "nowrap", fontFamily: F.body, letterSpacing: 0.5, textTransform: "uppercase" }}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {stats.breakdown.map((b, i) => (
+                <tr key={b.bikeName || i} style={{ borderBottom: `1px solid ${C.light}` }}>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: C.primary, fontWeight: 700 }}>{b.bikeName}</td>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151", fontWeight: 700 }}>{b.inStock}</td>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: "#10b981", fontWeight: 700 }}>{b.saleCount}</td>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{formatPKR(b.purchaseTotal)}</td>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{formatPKR(b.saleTotal)}</td>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: "#ef4444", fontWeight: 700 }}>{formatPKR(b.allocatedExpense)}</td>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: b.profit >= 0 ? "#10b981" : "#ef4444", fontWeight: 800 }}>{formatPKR(b.profit)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
     </div>
   );
 }
 
 // ========== BIKES PAGE — Bought & Sold Alag ==========
+// ========== INVENTORY PAGE — Purchase & Sale Alag ==========
 function BikesPage() {
-  const [bikes, setBikes] = useState([]);
+  const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [activeTab, setActiveTab] = useState("bought"); // "bought" ya "sold"
+  const [activeTab, setActiveTab] = useState("purchase"); // "purchase" ya "sale"
   const [search, setSearch] = useState("");
-  const emptyForm = {
-    bikeName: "", bikeModel: "", cc: "", engineNumber: "", chassisNumber: "",
-    purchaseYear: "", saleYear: "", condition: "Good", customerName: "",
-    customerCnic: "", customerAddress: "", purchasePrice: "", salePrice: "",
-    repairCost: "", status: "Bought", notes: ""
-  };
-  const [form, setForm] = useState(emptyForm);
+
+  const [form, setForm] = useState(EMPTY_PURCHASE_FORM);
   const [saving, setSaving] = useState(false);
 
-  const loadBikes = () => {
-    fetch(`${API}/api/bikes`).then(r => r.json()).then(data => { setBikes(Array.isArray(data) ? data : []); setLoading(false); }).catch(() => setLoading(false));
+  const loadRecords = () => {
+    fetch(`${API}/api/bikes`).then(r => r.json()).then(data => { setRecords(Array.isArray(data) ? data : []); setLoading(false); }).catch(() => setLoading(false));
   };
-  useEffect(() => { loadBikes(); }, []);
+  useEffect(() => { loadRecords(); }, []);
 
-  const saveBike = async () => {
+  // Jab tab change ho, form reset karo us tab ke hisaab se
+  useEffect(() => {
+    setForm(activeTab === "purchase" ? EMPTY_PURCHASE_FORM : EMPTY_SALE_FORM);
+    setShowForm(false);
+  }, [activeTab]);
+
+  const purchaseRecords = records.filter(r => r.recordType === "purchase");
+  const saleRecords = records.filter(r => r.recordType === "sale");
+
+  // Agla number nikalna - existing max number + 1
+  const nextNumber = (list) => {
+    if (list.length === 0) return 1;
+    return Math.max(...list.map(r => Number(r.recordNumber) || 0)) + 1;
+  };
+
+  const matchesSearch = (r) => !search || [r.bikeName, r.bikeModel, r.customerName, r.engineNumber, r.chassisNumber, String(r.recordNumber || "")].some(f => f?.toString().toLowerCase().includes(search.toLowerCase()));
+
+  const filteredPurchase = purchaseRecords.filter(matchesSearch);
+  const filteredSale = saleRecords.filter(matchesSearch);
+
+  const saveRecord = async () => {
     setSaving(true);
-    await fetch(`${API}/api/bikes`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-    setSaving(false); setForm(emptyForm); setShowForm(false); loadBikes();
+    const list = activeTab === "purchase" ? purchaseRecords : saleRecords;
+    const recordNumber = nextNumber(list);
+    const payload = { ...form, recordNumber };
+    await fetch(`${API}/api/bikes`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    setSaving(false);
+    setForm(activeTab === "purchase" ? EMPTY_PURCHASE_FORM : EMPTY_SALE_FORM);
+    setShowForm(false);
+    loadRecords();
   };
 
-  const markAsSold = async (bike) => {
-    if (!window.confirm("Mark this bike as SOLD?")) return;
-    const salePrice = prompt("Enter Sale Price (Rs.):", bike.salePrice || "");
-    if (!salePrice) return;
-    await fetch(`${API}/api/bikes/${bike._id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...bike, status: "Sold", salePrice: Number(salePrice) })
-    });
-    loadBikes();
-  };
-
-  const deleteBike = async (id) => {
-    if (!window.confirm("Delete this bike?")) return;
+  const deleteRecord = async (id) => {
+    if (!window.confirm("Delete this record?")) return;
     await fetch(`${API}/api/bikes/${id}`, { method: "DELETE" });
-    loadBikes();
+    loadRecords();
   };
 
-  const boughtBikes = bikes.filter(b => b.status !== "Sold" && (!search || [b.bikeName, b.bikeModel, b.engineNumber, b.chassisNumber].some(f => f?.toLowerCase().includes(search.toLowerCase()))));
-  const soldBikes = bikes.filter(b => b.status === "Sold" && (!search || [b.bikeName, b.bikeModel, b.customerName, b.engineNumber].some(f => f?.toLowerCase().includes(search.toLowerCase()))));
+  // Total Price ya Paid/Received change hote hi Remaining Amount khud-bakhud calculate
+  const handleAmountChange = (key, value) => {
+    const updated = { ...form, [key]: value };
+    const total = Number(updated.totalPrice) || 0;
+    const paidKey = activeTab === "purchase" ? "amountPaid" : "receivedAmount";
+    const paid = Number(updated[paidKey]) || 0;
+    updated.remainingAmount = total - paid;
+    setForm(updated);
+  };
 
-  const fields = [["Bike Name", "bikeName"], ["Bike Model", "bikeModel"], ["CC", "cc"], ["Engine Number", "engineNumber"], ["Chassis Number", "chassisNumber"], ["Purchase Year", "purchaseYear"], ["Sale Year", "saleYear"], ["Customer Name", "customerName"], ["Customer CNIC", "customerCnic"], ["Customer Address", "customerAddress"]];
-  const numFields = [["Purchase Price (Rs.)", "purchasePrice"], ["Sale Price (Rs.)", "salePrice"], ["Repair Cost (Rs.)", "repairCost"]];
+  const textFields = [
+    ["Bike Number", "bikeNumber"],
+    ["Customer Name", "customerName"], ["CNIC Number", "customerCnic"], ["Address", "customerAddress"],
+    ["Bike Name", "bikeName"], ["CC", "cc"], ["Bike Model", "bikeModel"],
+    ["Engine Number", "engineNumber"], ["Chassis Number", "chassisNumber"],
+  ];
+
+  const headers = activeTab === "purchase"
+    ? ["Purchase Number", "Date", "Bike Number", "Customer", "CNIC", "Address", "Bike Name", "CC", "Model", "Engine #", "Chassis #", "Total Price", "Paid", "Remaining", "Del"]
+    : ["Account Number", "Date", "Bike Number", "Customer", "CNIC", "Address", "Bike Name", "CC", "Model", "Engine #", "Chassis #", "Total Price", "Received", "Remaining", "Del"];
+
+  const activeRows = activeTab === "purchase" ? filteredPurchase : filteredSale;
 
   return (
     <div style={{ padding: "32px 40px", maxWidth: 1400, margin: "0 auto", fontFamily: F.body }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
         <h1 style={{ fontFamily: F.heading, fontSize: 28, color: C.primary, margin: 0 }}>🏍️ Bike Inventory</h1>
+        <input type="text" placeholder="🔍 Search..." value={search} onChange={e => setSearch(e.target.value)} style={{ padding: "9px 14px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none", minWidth: 200 }} />
         <button onClick={() => setShowForm(!showForm)} style={{ padding: "9px 22px", background: C.primary, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 700, fontSize: 13, fontFamily: F.body, letterSpacing: 0.5 }}>
-          {showForm ? "✕ Cancel" : "+ Add Bike"}
+          {showForm ? "✕ Cancel" : `+ Add ${activeTab === "purchase" ? "Purchase" : "Sale"}`}
         </button>
       </div>
 
-      {/* Stats Row */}
-      <div style={{ display: "flex", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
-        <div style={{ background: "#fff", border: `1px solid ${C.border}`, borderTop: `4px solid #f59e0b`, borderRadius: 12, padding: "16px 24px", textAlign: "center", minWidth: 130 }}>
-          <div style={{ fontFamily: F.heading, fontSize: 24, color: C.primary }}>{boughtBikes.length}</div>
-          <div style={{ fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: 1 }}>In Stock</div>
-        </div>
-        <div style={{ background: "#fff", border: `1px solid ${C.border}`, borderTop: "4px solid #10b981", borderRadius: 12, padding: "16px 24px", textAlign: "center", minWidth: 130 }}>
-          <div style={{ fontFamily: F.heading, fontSize: 24, color: C.primary }}>{soldBikes.length}</div>
-          <div style={{ fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: 1 }}>Sold</div>
-        </div>
-        <div style={{ background: "#fff", border: `1px solid ${C.border}`, borderTop: `4px solid ${C.accent}`, borderRadius: 12, padding: "16px 24px", textAlign: "center", minWidth: 160 }}>
-          <div style={{ fontFamily: F.heading, fontSize: 18, color: C.primary }}>{formatPKR(soldBikes.reduce((s, b) => s + ((b.salePrice || 0) - (b.purchasePrice || 0) - (b.repairCost || 0)), 0))}</div>
-          <div style={{ fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: 1 }}>Total Profit</div>
-        </div>
-      </div>
-
-      {/* Add Form */}
-      {showForm && (
-        <div style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 12, padding: 24, marginBottom: 22 }}>
-          <h3 style={{ fontFamily: F.heading, fontSize: 17, color: C.primary, marginBottom: 18, marginTop: 0 }}>Add New Bike</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 14 }}>
-            {fields.map(([label, key]) => (
-              <div key={key} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: C.primary, letterSpacing: 0.5 }}>{label}</label>
-                <input type="text" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder={label} />
-              </div>
-            ))}
-            {numFields.map(([label, key]) => (
-              <div key={key} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: C.primary, letterSpacing: 0.5 }}>{label}</label>
-                <input type="number" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder="0" />
-              </div>
-            ))}
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary, letterSpacing: 0.5 }}>Condition</label>
-              <select value={form.condition} onChange={e => setForm({ ...form, condition: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body }}>
-                {["Excellent", "Good", "Fair", "Needs Repair"].map(c => <option key={c}>{c}</option>)}
-              </select>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 5, gridColumn: "1 / -1" }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary, letterSpacing: 0.5 }}>Notes</label>
-              <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, height: 70, resize: "vertical", outline: "none" }} placeholder="Any notes..." />
-            </div>
-          </div>
-          {form.purchasePrice && (
-            <div style={{ background: C.light, color: C.accent, padding: "10px 16px", borderRadius: 8, marginBottom: 14, fontWeight: 600, fontSize: 14 }}>
-              Profit Preview: {formatPKR((+form.salePrice || 0) - (+form.purchasePrice || 0) - (+form.repairCost || 0))}
-            </div>
-          )}
-          <button onClick={saveBike} disabled={saving} style={{ padding: "10px 24px", background: C.primary, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 700, fontSize: 13, fontFamily: F.body }}>
-            {saving ? "Saving..." : "Save Bike"}
-          </button>
-        </div>
-      )}
-
-      {/* Search */}
-      <input type="text" placeholder="🔍 Search by name, model, engine, chassis..." value={search} onChange={e => setSearch(e.target.value)}
-        style={{ padding: "9px 14px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, width: 320, marginBottom: 20, outline: "none" }} />
-
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 0, marginBottom: 20, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", maxWidth: 340 }}>
-        {[["bought", "🛒 Bought (In Stock)", boughtBikes.length], ["sold", "✅ Sold", soldBikes.length]].map(([tab, label, count]) => (
+      <div style={{ display: "flex", marginBottom: 22, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", maxWidth: 400 }}>
+        {[["purchase", "🛒 Purchase", purchaseRecords.length], ["sale", "✅ Sale", saleRecords.length]].map(([tab, label, count]) => (
           <button key={tab} onClick={() => setActiveTab(tab)} style={{
             flex: 1, padding: "10px 0", border: "none", cursor: "pointer", fontFamily: F.body, fontWeight: 700, fontSize: 13, letterSpacing: 0.5,
             background: activeTab === tab ? C.primary : "#fff",
@@ -344,90 +360,86 @@ function BikesPage() {
         ))}
       </div>
 
-      {loading ? <div style={{ textAlign: "center", padding: 60, color: "#64748b" }}>Loading...</div> : (
-        <>
-          {/* BOUGHT BIKES TABLE */}
-          {activeTab === "bought" && (
-            boughtBikes.length === 0
-              ? <div style={{ textAlign: "center", padding: 60, color: "#94a3b8" }}><div style={{ fontSize: 60 }}>🏍️</div><p>No bikes in stock.</p></div>
-              : <div style={{ overflowX: "auto" }}>
-                  <div style={{ background: C.light, border: `1px solid ${C.border}`, borderRadius: "10px 10px 0 0", padding: "12px 20px", fontFamily: F.heading, fontWeight: 700, color: C.primary, fontSize: 15 }}>
-                    🛒 Bought Bikes — In Stock ({boughtBikes.length})
-                  </div>
-                  <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", borderRadius: "0 0 12px 12px", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
-                    <thead>
-                      <tr style={{ background: C.primary }}>
-                        {["Bike Name", "Model/CC", "Engine #", "Chassis #", "Condition", "Purchase Year", "Buy Price", "Repair Cost", "Notes", "Action"].map(h => (
-                          <th key={h} style={{ padding: "12px 14px", color: "#fff", fontSize: 11, fontWeight: 700, textAlign: "left", whiteSpace: "nowrap", fontFamily: F.body, letterSpacing: 0.5, textTransform: "uppercase" }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {boughtBikes.map(b => (
-                        <tr key={b._id} style={{ borderBottom: `1px solid ${C.light}` }}>
-                          <td style={{ padding: "11px 14px", fontSize: 13, color: C.primary, fontWeight: 600 }}>{b.bikeName || "-"}</td>
-                          <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{b.bikeModel || "-"}{b.cc ? ` (${b.cc})` : ""}</td>
-                          <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{b.engineNumber || "-"}</td>
-                          <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{b.chassisNumber || "-"}</td>
-                          <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{b.condition || "-"}</td>
-                          <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{b.purchaseYear || "-"}</td>
-                          <td style={{ padding: "11px 14px", fontSize: 13, color: C.accent, fontWeight: 600 }}>{formatPKR(b.purchasePrice)}</td>
-                          <td style={{ padding: "11px 14px", fontSize: 13, color: "#ef4444" }}>{formatPKR(b.repairCost)}</td>
-                          <td style={{ padding: "11px 14px", fontSize: 12, color: "#64748b", maxWidth: 150, whiteSpace: "normal" }}>{b.notes || "-"}</td>
-                          <td style={{ padding: "11px 14px", whiteSpace: "nowrap" }}>
-                            <button onClick={() => markAsSold(b)} style={{ background: "#dcfce7", color: "#166534", border: "none", borderRadius: 6, padding: "5px 10px", cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: F.body, marginRight: 6 }}>Mark Sold</button>
-                            <button onClick={() => deleteBike(b._id)} style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer" }}>🗑️</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-          )}
-
-          {/* SOLD BIKES TABLE */}
-          {activeTab === "sold" && (
-            soldBikes.length === 0
-              ? <div style={{ textAlign: "center", padding: 60, color: "#94a3b8" }}><div style={{ fontSize: 60 }}>✅</div><p>No bikes sold yet.</p></div>
-              : <div style={{ overflowX: "auto" }}>
-                  <div style={{ background: "#dcfce7", border: "1px solid #bbf7d0", borderRadius: "10px 10px 0 0", padding: "12px 20px", fontFamily: F.heading, fontWeight: 700, color: "#166534", fontSize: 15 }}>
-                    ✅ Sold Bikes ({soldBikes.length}) — Total Profit: {formatPKR(soldBikes.reduce((s, b) => s + ((b.salePrice || 0) - (b.purchasePrice || 0) - (b.repairCost || 0)), 0))}
-                  </div>
-                  <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", borderRadius: "0 0 12px 12px", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
-                    <thead>
-                      <tr style={{ background: "#166534" }}>
-                        {["Bike Name", "Model/CC", "Engine #", "Chassis #", "Customer", "CNIC", "Address", "Buy Price", "Sale Price", "Repair", "Profit", "Sale Year", "Del"].map(h => (
-                          <th key={h} style={{ padding: "12px 14px", color: "#fff", fontSize: 11, fontWeight: 700, textAlign: "left", whiteSpace: "nowrap", fontFamily: F.body, letterSpacing: 0.5, textTransform: "uppercase" }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {soldBikes.map(b => {
-                        const profit = (b.salePrice || 0) - (b.purchasePrice || 0) - (b.repairCost || 0);
-                        return (
-                          <tr key={b._id} style={{ borderBottom: "1px solid #f0fdf4" }}>
-                            <td style={{ padding: "11px 14px", fontSize: 13, color: C.primary, fontWeight: 600 }}>{b.bikeName || "-"}</td>
-                            <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{b.bikeModel || "-"}{b.cc ? ` (${b.cc})` : ""}</td>
-                            <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{b.engineNumber || "-"}</td>
-                            <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{b.chassisNumber || "-"}</td>
-                            <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151", fontWeight: 500 }}>{b.customerName || "-"}</td>
-                            <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{b.customerCnic || "-"}</td>
-                            <td style={{ padding: "11px 14px", fontSize: 12, color: "#64748b" }}>{b.customerAddress || "-"}</td>
-                            <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{formatPKR(b.purchasePrice)}</td>
-                            <td style={{ padding: "11px 14px", fontSize: 13, color: C.accent, fontWeight: 600 }}>{formatPKR(b.salePrice)}</td>
-                            <td style={{ padding: "11px 14px", fontSize: 13, color: "#ef4444" }}>{formatPKR(b.repairCost)}</td>
-                            <td style={{ padding: "11px 14px", fontSize: 13, fontWeight: 700, color: profit >= 0 ? "#10b981" : "#ef4444" }}>{formatPKR(profit)}</td>
-                            <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{b.saleYear || "-"}</td>
-                            <td style={{ padding: "11px 14px" }}><button onClick={() => deleteBike(b._id)} style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer" }}>🗑️</button></td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-          )}
-        </>
+      {/* Add Form */}
+      {showForm && (
+        <div style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 12, padding: 24, marginBottom: 22 }}>
+          <h3 style={{ fontFamily: F.heading, fontSize: 17, color: C.primary, marginBottom: 18, marginTop: 0 }}>
+            New {activeTab === "purchase" ? "Purchase" : "Sale"} Entry — {activeTab === "purchase" ? "Purchase Number" : "Account Number"}: {nextNumber(activeTab === "purchase" ? purchaseRecords : saleRecords)}
+          </h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 14 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary, letterSpacing: 0.5 }}>Date</label>
+              <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
+            </div>
+            {textFields.map(([label, key]) => (
+              <div key={key} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.primary, letterSpacing: 0.5 }}>{label}</label>
+                <input type="text" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder={label} />
+              </div>
+            ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary, letterSpacing: 0.5 }}>Total Price (Rs.)</label>
+              <input type="number" value={form.totalPrice} onChange={e => handleAmountChange("totalPrice", e.target.value)} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder="0" />
+            </div>
+            {activeTab === "purchase" ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.primary, letterSpacing: 0.5 }}>Amount Paid (Rs.)</label>
+                <input type="number" value={form.amountPaid} onChange={e => handleAmountChange("amountPaid", e.target.value)} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder="0" />
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.primary, letterSpacing: 0.5 }}>Received Amount (Rs.)</label>
+                <input type="number" value={form.receivedAmount} onChange={e => handleAmountChange("receivedAmount", e.target.value)} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder="0" />
+              </div>
+            )}
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary, letterSpacing: 0.5 }}>Remaining Amount (Rs.)</label>
+              <input type="number" value={form.remainingAmount} readOnly style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none", background: C.light, color: C.primary, fontWeight: 700 }} placeholder="0" />
+            </div>
+          </div>
+          <button onClick={saveRecord} disabled={saving} style={{ padding: "10px 24px", background: C.primary, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 700, fontSize: 13, fontFamily: F.body }}>
+            {saving ? "Saving..." : "Save Entry"}
+          </button>
+        </div>
       )}
+
+      {/* Table */}
+      {loading ? <div style={{ textAlign: "center", padding: 60, color: "#64748b" }}>Loading...</div> :
+        activeRows.length === 0
+          ? <div style={{ textAlign: "center", padding: 60, color: "#94a3b8" }}><div style={{ fontSize: 60 }}>{activeTab === "purchase" ? "🛒" : "✅"}</div><p>No {activeTab} records yet.</p></div>
+          : <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+                <thead>
+                  <tr style={{ background: activeTab === "purchase" ? C.primary : "#166534" }}>
+                    {headers.map(h => (
+                      <th key={h} style={{ padding: "12px 14px", color: "#fff", fontSize: 11, fontWeight: 700, textAlign: "left", whiteSpace: "nowrap", fontFamily: F.body, letterSpacing: 0.5, textTransform: "uppercase" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeRows.map(r => (
+                    <tr key={r._id} style={{ borderBottom: `1px solid ${C.light}` }}>
+                      <td style={{ padding: "11px 14px", fontSize: 13, fontWeight: 700, color: C.primary }}>{r.recordNumber || "-"}</td>
+                      <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{formatDate(r.date || r.createdAt)}</td>
+                      <td style={{ padding: "11px 14px", fontSize: 13, color: C.primary, fontWeight: 600 }}>{r.bikeNumber || "-"}</td>
+                      <td style={{ padding: "11px 14px", fontSize: 13, color: C.primary, fontWeight: 600 }}>{r.customerName || "-"}</td>
+                      <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{r.customerCnic || "-"}</td>
+                      <td style={{ padding: "11px 14px", fontSize: 12, color: "#64748b", maxWidth: 140, whiteSpace: "normal" }}>{r.customerAddress || "-"}</td>
+                      <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{r.bikeName || "-"}</td>
+                      <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{r.cc || "-"}</td>
+                      <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{r.bikeModel || "-"}</td>
+                      <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{r.engineNumber || "-"}</td>
+                      <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{r.chassisNumber || "-"}</td>
+                      <td style={{ padding: "11px 14px", fontSize: 13, color: C.accent, fontWeight: 600 }}>{formatPKR(r.totalPrice)}</td>
+                      <td style={{ padding: "11px 14px", fontSize: 13, color: "#10b981" }}>{formatPKR(activeTab === "purchase" ? r.amountPaid : r.receivedAmount)}</td>
+                      <td style={{ padding: "11px 14px", fontSize: 13, fontWeight: 700, color: (r.remainingAmount || 0) > 0 ? "#ef4444" : "#10b981" }}>{formatPKR(r.remainingAmount)}</td>
+                      <td style={{ padding: "11px 14px" }}><button onClick={() => deleteRecord(r._id)} style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer" }}>🗑️</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+      }
     </div>
   );
 }
@@ -436,7 +448,7 @@ function PlatesPage() {
   const [plates, setPlates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const emptyForm = { ownerName: "", cnic: "", bikeModel: "", cc: "", oldPlate: "", newPlate: "", registrationDate: "", feeCharged: "", feePaid: "", status: "Pending", notes: "" };
+  const emptyForm = { ownerName: "", cnic: "", bikeModel: "", cc: "", engineNumber: "", chassisNumber: "", oldPlate: "", newPlate: "", registrationDate: "", feeCharged: "", feePaid: "", status: "Pending", notes: "" };
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const loadPlates = () => { fetch(`${API}/api/plates`).then(r => r.json()).then(data => { setPlates(Array.isArray(data) ? data : []); setLoading(false); }).catch(() => setLoading(false)); };
@@ -451,7 +463,7 @@ function PlatesPage() {
   return (
     <div style={{ padding: "32px 40px", maxWidth: 1400, margin: "0 auto", fontFamily: F.body }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <h1 style={{ fontFamily: F.heading, fontSize: 28, color: C.primary, margin: 0 }}>📋 Number Plate Registration</h1>
+        <h1 style={{ fontFamily: F.heading, fontSize: 28, color: C.primary, margin: 0 }}>📋 Registration</h1>
         <button onClick={() => setShowForm(!showForm)} style={{ padding: "9px 22px", background: C.primary, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 700, fontSize: 13, fontFamily: F.body }}>
           {showForm ? "✕ Cancel" : "+ Add Record"}
         </button>
@@ -465,16 +477,16 @@ function PlatesPage() {
         <div style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 12, padding: 24, marginBottom: 22 }}>
           <h3 style={{ fontFamily: F.heading, fontSize: 17, color: C.primary, marginBottom: 18, marginTop: 0 }}>New Registration Record</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 14 }}>
-            {[["Owner Name", "ownerName"], ["CNIC", "cnic"], ["Bike Model", "bikeModel"], ["CC", "cc"], ["Old Plate", "oldPlate"], ["New Plate", "newPlate"]].map(([label, key]) => (
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Date</label>
+              <input type="date" value={form.registrationDate} onChange={e => setForm({ ...form, registrationDate: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
+            </div>
+            {[["Owner Name", "ownerName"], ["CNIC", "cnic"], ["Bike Model", "bikeModel"], ["CC", "cc"], ["Engine Number", "engineNumber"], ["Chassis Number", "chassisNumber"], ["Old Number", "oldPlate"], ["New Number", "newPlate"]].map(([label, key]) => (
               <div key={key} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                 <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>{label}</label>
                 <input type="text" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
               </div>
             ))}
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Registration Date</label>
-              <input type="date" value={form.registrationDate} onChange={e => setForm({ ...form, registrationDate: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
-            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Fee Charged from Customer (Rs.)</label>
               <input type="number" value={form.feeCharged} onChange={e => setForm({ ...form, feeCharged: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder="0" />
@@ -509,7 +521,7 @@ function PlatesPage() {
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
             <thead><tr style={{ background: C.primary }}>
-              {["Owner", "CNIC", "Bike", "Old Plate", "New Plate", "Date", "Charged", "Paid", "Profit", "Status", "Del"].map(h => (
+              {["Owner", "CNIC", "Bike", "Engine #", "Chassis #", "Old Number", "New Number", "Date", "Charged", "Paid", "Profit", "Status", "Del"].map(h => (
                 <th key={h} style={{ padding: "12px 14px", color: "#fff", fontSize: 11, fontWeight: 700, textAlign: "left", whiteSpace: "nowrap", fontFamily: F.body, letterSpacing: 0.5, textTransform: "uppercase" }}>{h}</th>
               ))}
             </tr></thead>
@@ -519,6 +531,8 @@ function PlatesPage() {
                   <td style={{ padding: "11px 14px", fontSize: 13, color: C.primary, fontWeight: 600 }}>{p.ownerName || "-"}</td>
                   <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{p.cnic || "-"}</td>
                   <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{p.bikeModel || "-"}{p.cc ? ` (${p.cc})` : ""}</td>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{p.engineNumber || "-"}</td>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{p.chassisNumber || "-"}</td>
                   <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{p.oldPlate || "-"}</td>
                   <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{p.newPlate || "-"}</td>
                   <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{formatDate(p.registrationDate || p.createdAt)}</td>
