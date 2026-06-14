@@ -455,7 +455,10 @@ function PlatesPage() {
   useEffect(() => { loadPlates(); }, []);
   const savePlate = async () => {
     setSaving(true);
-    await fetch(`${API}/api/plates`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    await fetch(`${API}/api/plates`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+  ...form,
+  amount: Number(form.amount) || 0
+}) });
     setSaving(false); setForm(emptyForm); setShowForm(false); loadPlates();
   };
   const deletePlate = async (id) => { if (!window.confirm("Delete?")) return; await fetch(`${API}/api/plates/${id}`, { method: "DELETE" }); loadPlates(); };
@@ -562,7 +565,16 @@ function ExpensesPage() {
   useEffect(() => { loadExpenses(); }, []);
   const saveExpense = async () => {
     setSaving(true);
-    await fetch(`${API}/api/expenses`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    await fetch(`${API}/api/expenses`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+  ...form,
+  amount: Number(form.amount) || 0,
+  totalPrice: Number(form.totalPrice) || 0,
+  amountPaid: Number(form.amountPaid) || 0,
+  remainingAmount: Number(form.remainingAmount) || 0,
+  receivedAmount: Number(form.receivedAmount) || 0,
+  feeCharged: Number(form.feeCharged) || 0,
+  feePaid: Number(form.feePaid) || 0,
+}) });
     setSaving(false); setForm(emptyForm); setShowForm(false); loadExpenses();
   };
   const deleteExpense = async (id) => { if (!window.confirm("Delete?")) return; await fetch(`${API}/api/expenses/${id}`, { method: "DELETE" }); loadExpenses(); };
