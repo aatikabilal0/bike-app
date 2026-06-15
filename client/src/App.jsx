@@ -296,16 +296,36 @@ function BikesPage() {
 
   const saveRecord = async () => {
     setSaving(true);
-    const list = activeTab === "purchase" ? purchaseRecords : saleRecords;
-    const recordNumber = nextNumber(list);
-    const payload = { ...form, recordNumber };
-    await fetch(`${API}/api/bikes`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    if (editRecord) {
+      await fetch(`${API}/api/bikes/${editRecord._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      });
+      setEditRecord(null);
+    } else {
+      const list = activeTab === "purchase" ? purchaseRecords : saleRecords;
+      const recordNumber = nextNumber(list);
+      const payload = { ...form, recordNumber };
+      await fetch(`${API}/api/bikes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    }
     setSaving(false);
     setForm(activeTab === "purchase" ? EMPTY_PURCHASE_FORM : EMPTY_SALE_FORM);
     setShowForm(false);
     loadRecords();
   };
+  const [editRecord, setEditRecord] = useState(null);
 
+const startEdit = (record) => {
+  setEditRecord(record);
+  setForm(record);
+  setShowForm(true);
+  window.scrollTo(0, 0);
+};
   const deleteRecord = async (id) => {
     if (!window.confirm("Delete this record?")) return;
     await fetch(`${API}/api/bikes/${id}`, { method: "DELETE" });
@@ -397,7 +417,7 @@ function BikesPage() {
             </div>
           </div>
           <button onClick={saveRecord} disabled={saving} style={{ padding: "10px 24px", background: C.primary, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 700, fontSize: 13, fontFamily: F.body }}>
-            {saving ? "Saving..." : "Save Entry"}
+            {saving ? "Saving..." : editRecord ? "Update Entry" : "Save Entry"}
           </button>
         </div>
       )}
@@ -432,7 +452,10 @@ function BikesPage() {
                       <td style={{ padding: "11px 14px", fontSize: 13, color: C.accent, fontWeight: 600 }}>{formatPKR(r.totalPrice)}</td>
                       <td style={{ padding: "11px 14px", fontSize: 13, color: "#10b981" }}>{formatPKR(activeTab === "purchase" ? r.amountPaid : r.receivedAmount)}</td>
                       <td style={{ padding: "11px 14px", fontSize: 13, fontWeight: 700, color: (r.remainingAmount || 0) > 0 ? "#ef4444" : "#10b981" }}>{formatPKR(r.remainingAmount)}</td>
-                      <td style={{ padding: "11px 14px" }}><button onClick={() => deleteRecord(r._id)} style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer" }}>🗑️</button></td>
+                      <td style={{ padding: "11px 14px" }}>
+  <button onClick={() => startEdit(r)} style={{ background: "#dbeafe", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer", marginRight: 4 }}>✏️</button>
+  <button onClick={() => deleteRecord(r._id)} style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer" }}>🗑️</button>
+</td>
                     </tr>
                   ))}
                 </tbody>
@@ -454,12 +477,37 @@ function PlatesPage() {
   useEffect(() => { loadPlates(); }, []);
   const savePlate = async () => {
     setSaving(true);
-    await fetch(`${API}/api/plates`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
-  ...form,
-  amount: Number(form.amount) || 0
-}) });
-    setSaving(false); setForm(emptyForm); setShowForm(false); loadPlates();
+    if (editPlate) {
+      await fetch(`${API}/api/plates/${editPlate._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      });
+      setEditPlate(null);
+    } else {
+      await fetch(`${API}/api/plates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          feeCharged: Number(form.feeCharged) || 0,
+          feePaid: Number(form.feePaid) || 0,
+        })
+      });
+    }
+    setSaving(false);
+    setForm(emptyForm);
+    setShowForm(false);
+    loadPlates();
   };
+  const [editPlate, setEditPlate] = useState(null);
+
+const startEditPlate = (plate) => {
+  setEditPlate(plate);
+  setForm(plate);
+  setShowForm(true);
+  window.scrollTo(0, 0);
+};
   const deletePlate = async (id) => { if (!window.confirm("Delete?")) return; await fetch(`${API}/api/plates/${id}`, { method: "DELETE" }); loadPlates(); };
   const totalProfit = plates.reduce((sum, p) => sum + ((p.feeCharged || 0) - (p.feePaid || 0)), 0);
   return (
@@ -514,7 +562,7 @@ function PlatesPage() {
             </div>
           )}
           <button onClick={savePlate} disabled={saving} style={{ padding: "10px 24px", background: C.primary, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 700, fontSize: 13, fontFamily: F.body }}>
-            {saving ? "Saving..." : "Save Record"}
+            {saving ? "Saving..." : editPlate ? "Update Record" : "Save Record"}
           </button>
         </div>
       )}
@@ -542,8 +590,10 @@ function PlatesPage() {
                   <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{formatPKR(p.feePaid)}</td>
                   <td style={{ padding: "11px 14px", fontSize: 13, fontWeight: 700, color: "#10b981" }}>{formatPKR((p.feeCharged || 0) - (p.feePaid || 0))}</td>
                   <td style={{ padding: "11px 14px" }}><span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, background: p.status === "Complete" ? "#dcfce7" : "#fef9c3", color: p.status === "Complete" ? "#166534" : "#854d0e" }}>{p.status}</span></td>
-                  <td style={{ padding: "11px 14px" }}><button onClick={() => deletePlate(p._id)} style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer" }}>🗑️</button></td>
-                </tr>
+<td style={{ padding: "11px 14px" }}>
+  <button onClick={() => startEditPlate(p)} style={{ background: "#dbeafe", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer", marginRight: 4 }}>✏️</button>
+  <button onClick={() => deletePlate(p._id)} style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer" }}>🗑️</button>
+</td>                </tr>
               ))}
             </tbody>
           </table>
@@ -564,18 +614,33 @@ function ExpensesPage() {
   useEffect(() => { loadExpenses(); }, []);
   const saveExpense = async () => {
     setSaving(true);
-    await fetch(`${API}/api/expenses`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
-  ...form,
-  amount: Number(form.amount) || 0,
-  totalPrice: Number(form.totalPrice) || 0,
-  amountPaid: Number(form.amountPaid) || 0,
-  remainingAmount: Number(form.remainingAmount) || 0,
-  receivedAmount: Number(form.receivedAmount) || 0,
-  feeCharged: Number(form.feeCharged) || 0,
-  feePaid: Number(form.feePaid) || 0,
-}) });
-    setSaving(false); setForm(emptyForm); setShowForm(false); loadExpenses();
+    if (editExpense) {
+      await fetch(`${API}/api/expenses/${editExpense._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, amount: Number(form.amount) || 0 })
+      });
+      setEditExpense(null);
+    } else {
+      await fetch(`${API}/api/expenses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, amount: Number(form.amount) || 0 })
+      });
+    }
+    setSaving(false);
+    setForm(emptyForm);
+    setShowForm(false);
+    loadExpenses();
   };
+  const [editExpense, setEditExpense] = useState(null);
+
+const startEditExpense = (expense) => {
+  setEditExpense(expense);
+  setForm(expense);
+  setShowForm(true);
+  window.scrollTo(0, 0);
+};
   const deleteExpense = async (id) => { if (!window.confirm("Delete?")) return; await fetch(`${API}/api/expenses/${id}`, { method: "DELETE" }); loadExpenses(); };
   const total = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
   return (
@@ -617,7 +682,7 @@ function ExpensesPage() {
             </div>
           </div>
           <button onClick={saveExpense} disabled={saving} style={{ padding: "10px 24px", background: C.primary, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 700, fontSize: 13, fontFamily: F.body }}>
-            {saving ? "Saving..." : "Save Expense"}
+            {saving ? "Saving..." : editExpense ? "Update Expense" : "Save Expense"}
           </button>
         </div>
       )}
@@ -638,8 +703,10 @@ function ExpensesPage() {
                   <td style={{ padding: "11px 14px", fontSize: 13, color: "#ef4444", fontWeight: 700 }}>{formatPKR(e.amount)}</td>
                   <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{formatDate(e.date || e.createdAt)}</td>
                   <td style={{ padding: "11px 14px", fontSize: 13, color: "#64748b" }}>{e.notes || "-"}</td>
-                  <td style={{ padding: "11px 14px" }}><button onClick={() => deleteExpense(e._id)} style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer" }}>🗑️</button></td>
-                </tr>
+<td style={{ padding: "11px 14px" }}>
+  <button onClick={() => startEditExpense(e)} style={{ background: "#dbeafe", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer", marginRight: 4 }}>✏️</button>
+  <button onClick={() => deleteExpense(e._id)} style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer" }}>🗑️</button>
+</td>                </tr>
               ))}
             </tbody>
           </table>
