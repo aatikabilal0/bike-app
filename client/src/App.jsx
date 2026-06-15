@@ -24,6 +24,9 @@ const EMPTY_SALE_FORM = {
   bikeName: "", cc: "", bikeModel: "", engineNumber: "", chassisNumber: "",
   totalPrice: "", receivedAmount: "", remainingAmount: ""
 };
+const BIKE_NAMES = ["Honda", "Yamaha", "Suzuki", "United", "Ravi", "Zxmco", "Eagle", "Power", "Road Prince", "Super Power", "Unique", "Crown", "Jialing"];
+const CC_OPTIONS = ["70", "100", "110", "125", "150", "200", "250"];
+const BIKE_MODELS = ["CD 70", "CG 125", "CB 150F", "YBR 125", "GS 150", "GR 150", "Pk70", "Zx70", "Pridor", "Dream"];
 
 function Navbar({ page, setPage, isLoggedIn, onLogout }) {
   return (
@@ -345,7 +348,7 @@ const startEdit = (record) => {
   const textFields = [
     ["Bike Number", "bikeNumber"],
     ["Customer Name", "customerName"], ["CNIC Number", "customerCnic"], ["Address", "customerAddress"],
-    ["Bike Name", "bikeName"], ["CC", "cc"], ["Bike Model", "bikeModel"],
+    ["Bike Name", "bikeName", "bikeNameList"], ["CC", "cc", "ccList"], ["Bike Model", "bikeModel", "bikeModelList"],
     ["Engine Number", "engineNumber"], ["Chassis Number", "chassisNumber"],
   ];
 
@@ -390,12 +393,16 @@ const startEdit = (record) => {
               <label style={{ fontSize: 12, fontWeight: 600, color: C.primary, letterSpacing: 0.5 }}>Date</label>
               <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
             </div>
-            {textFields.map(([label, key]) => (
+           {textFields.map(([label, key, listId]) => (
               <div key={key} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                 <label style={{ fontSize: 12, fontWeight: 600, color: C.primary, letterSpacing: 0.5 }}>{label}</label>
-                <input type="text" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder={label} />
+                <input type="text" list={listId} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder={label} />
               </div>
             ))}
+            <datalist id="bikeNameList">{BIKE_NAMES.map(o => <option key={o} value={o} />)}</datalist>
+            <datalist id="ccList">{CC_OPTIONS.map(o => <option key={o} value={o} />)}</datalist>
+            <datalist id="bikeModelList">{BIKE_MODELS.map(o => <option key={o} value={o} />)}</datalist>
+
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.primary, letterSpacing: 0.5 }}>Total Price (Rs.)</label>
               <input type="number" value={form.totalPrice} onChange={e => handleAmountChange("totalPrice", e.target.value)} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder="0" />
@@ -470,8 +477,7 @@ function PlatesPage() {
   const [plates, setPlates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const emptyForm = { ownerName: "", cnic: "", bikeModel: "", cc: "", engineNumber: "", chassisNumber: "", oldPlate: "", newPlate: "", registrationDate: "", feeCharged: "", feePaid: "", status: "Pending", notes: "" };
-  const [form, setForm] = useState(emptyForm);
+const emptyForm = { ownerName: "", cnic: "", bikeNumber: "", bikeName: "", cc: "", bikeModel: "", engineNumber: "", chassisNumber: "", oldPlate: "", newPlate: "", registrationDate: "", feeCharged: "", feePaid: "", status: "Pending", notes: "" };  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const loadPlates = () => { fetch(`${API}/api/plates`).then(r => r.json()).then(data => { setPlates(Array.isArray(data) ? data : []); setLoading(false); }).catch(() => setLoading(false)); };
   useEffect(() => { loadPlates(); }, []);
@@ -531,12 +537,46 @@ const startEditPlate = (plate) => {
               <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Date</label>
               <input type="date" value={form.registrationDate} onChange={e => setForm({ ...form, registrationDate: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
             </div>
-            {[["Owner Name", "ownerName"], ["CNIC", "cnic"], ["Bike Model", "bikeModel"], ["CC", "cc"], ["Engine Number", "engineNumber"], ["Chassis Number", "chassisNumber"], ["Old Number", "oldPlate"], ["New Number", "newPlate"]].map(([label, key]) => (
-              <div key={key} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>{label}</label>
-                <input type="text" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
-              </div>
-            ))}
+{[["Owner Name", "ownerName"], ["CNIC", "cnic"], ["Bike Number", "bikeNumber"]].map(([label, key]) => (
+    <div key={key} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+    <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>{label}</label>
+    <input type="text" value={form[key] || ""} onChange={e => setForm({ ...form, [key]: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
+  </div>
+))}
+
+{/* Bike Name Dropdown */}
+<div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+  <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Bike Name</label>
+  <input list="bikeNames" value={form.bikeName || ""} onChange={e => setForm({ ...form, bikeName: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder="Select or type..." />
+  <datalist id="bikeNames">
+    {["Honda","Yamaha","Suzuki","United","Ravi","Zxmco","Eagle","Power","Road Prince","Super Power","Unique","Crown","Jialing"].map(n => <option key={n} value={n} />)}
+  </datalist>
+</div>
+
+{/* CC Dropdown */}
+<div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+  <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>CC</label>
+  <input list="ccList" value={form.cc || ""} onChange={e => setForm({ ...form, cc: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder="Select or type..." />
+  <datalist id="ccList">
+    {["70","100","110","125","150","200","250"].map(n => <option key={n} value={n} />)}
+  </datalist>
+</div>
+
+{/* Bike Model Dropdown */}
+<div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+  <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Bike Model</label>
+  <input list="bikeModels" value={form.bikeModel || ""} onChange={e => setForm({ ...form, bikeModel: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder="Select or type..." />
+  <datalist id="bikeModels">
+    {["CD 70","CG 125","CB 150F","YBR 125","GS 150","GR 150","Pk70","Zx70","Pridor","Dream"].map(n => <option key={n} value={n} />)}
+  </datalist>
+</div>
+
+{[["Engine Number", "engineNumber"], ["Chassis Number", "chassisNumber"], ["Old Number", "oldPlate"], ["New Number", "newPlate"]].map(([label, key]) => (
+  <div key={key} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+    <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>{label}</label>
+    <input type="text" value={form[key] || ""} onChange={e => setForm({ ...form, [key]: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
+  </div>
+))}
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Fee Charged from Customer (Rs.)</label>
               <input type="number" value={form.feeCharged} onChange={e => setForm({ ...form, feeCharged: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder="0" />
@@ -607,8 +647,7 @@ function ExpensesPage() {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const emptyForm = { title: "", amount: "", category: "Repair", date: "", notes: "" };
-  const [form, setForm] = useState(emptyForm);
+const emptyForm = { title: "", amount: "", category: "Repair", date: "", notes: "", bikeNumber: "", bikeName: "", cc: "", bikeModel: "", engineNumber: "", chassisNumber: "" };  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const loadExpenses = () => { fetch(`${API}/api/expenses`).then(r => r.json()).then(data => { setExpenses(Array.isArray(data) ? data : []); setLoading(false); }).catch(() => setLoading(false)); };
   useEffect(() => { loadExpenses(); }, []);
@@ -660,21 +699,56 @@ const startEditExpense = (expense) => {
         <div style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 12, padding: 24, marginBottom: 22 }}>
           <h3 style={{ fontFamily: F.heading, fontSize: 17, color: C.primary, marginBottom: 18, marginTop: 0 }}>Add Expense</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 14 }}>
-            {[["Title", "title", "text"], ["Amount (Rs.)", "amount", "number"]].map(([label, key, type]) => (
-              <div key={key} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>{label}</label>
-                <input type={type} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
-              </div>
-            ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Date</label>
+              <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Bike Number</label>
+              <input type="text" value={form.bikeNumber || ""} onChange={e => setForm({ ...form, bikeNumber: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Bike Name</label>
+              <input list="bikeNamesExp" value={form.bikeName || ""} onChange={e => setForm({ ...form, bikeName: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder="Select or type..." />
+              <datalist id="bikeNamesExp">
+                {["Honda","Yamaha","Suzuki","United","Ravi","Zxmco","Eagle","Power","Road Prince","Super Power","Unique","Crown","Jialing"].map(n => <option key={n} value={n} />)}
+              </datalist>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>CC</label>
+              <input list="ccListExp" value={form.cc || ""} onChange={e => setForm({ ...form, cc: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder="Select or type..." />
+              <datalist id="ccListExp">
+                {["70","100","110","125","150","200","250"].map(n => <option key={n} value={n} />)}
+              </datalist>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Bike Model</label>
+              <input list="bikeModelsExp" value={form.bikeModel || ""} onChange={e => setForm({ ...form, bikeModel: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} placeholder="Select or type..." />
+              <datalist id="bikeModelsExp">
+                {["CD 70","CG 125","CB 150F","YBR 125","GS 150","GR 150","Pk70","Zx70","Pridor","Dream"].map(n => <option key={n} value={n} />)}
+              </datalist>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Engine Number</label>
+              <input type="text" value={form.engineNumber || ""} onChange={e => setForm({ ...form, engineNumber: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Chassis Number</label>
+              <input type="text" value={form.chassisNumber || ""} onChange={e => setForm({ ...form, chassisNumber: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Title</label>
+              <input type="text" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Amount (Rs.)</label>
+              <input type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Category</label>
               <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body }}>
                 {["Repair", "Parts", "Transport", "Tools", "Rent", "Utilities", "Other"].map(c => <option key={c}>{c}</option>)}
               </select>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Date</label>
-              <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontFamily: F.body, outline: "none" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 5, gridColumn: "1 / -1" }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.primary }}>Notes</label>
@@ -691,22 +765,29 @@ const startEditExpense = (expense) => {
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
             <thead><tr style={{ background: C.primary }}>
-              {["Title", "Category", "Amount", "Date", "Notes", "Del"].map(h => (
+              {["Date", "Bike #", "Bike Name", "CC", "Model", "Engine #", "Chassis #", "Title", "Category", "Amount", "Notes", "Action"].map(h => (
                 <th key={h} style={{ padding: "12px 14px", color: "#fff", fontSize: 11, fontWeight: 700, textAlign: "left", fontFamily: F.body, letterSpacing: 0.5, textTransform: "uppercase" }}>{h}</th>
               ))}
             </tr></thead>
             <tbody>
               {expenses.map(e => (
                 <tr key={e._id} style={{ borderBottom: `1px solid ${C.light}` }}>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{formatDate(e.date || e.createdAt)}</td>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{e.bikeNumber || "-"}</td>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: C.primary, fontWeight: 600 }}>{e.bikeName || "-"}</td>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{e.cc || "-"}</td>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{e.bikeModel || "-"}</td>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{e.engineNumber || "-"}</td>
+                  <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{e.chassisNumber || "-"}</td>
                   <td style={{ padding: "11px 14px", fontSize: 13, color: C.primary, fontWeight: 600 }}>{e.title || "-"}</td>
                   <td style={{ padding: "11px 14px" }}><span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, background: C.light, color: C.accent }}>{e.category}</span></td>
                   <td style={{ padding: "11px 14px", fontSize: 13, color: "#ef4444", fontWeight: 700 }}>{formatPKR(e.amount)}</td>
-                  <td style={{ padding: "11px 14px", fontSize: 13, color: "#374151" }}>{formatDate(e.date || e.createdAt)}</td>
                   <td style={{ padding: "11px 14px", fontSize: 13, color: "#64748b" }}>{e.notes || "-"}</td>
-<td style={{ padding: "11px 14px" }}>
-  <button onClick={() => startEditExpense(e)} style={{ background: "#dbeafe", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer", marginRight: 4 }}>✏️</button>
-  <button onClick={() => deleteExpense(e._id)} style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer" }}>🗑️</button>
-</td>                </tr>
+                  <td style={{ padding: "11px 14px" }}>
+                    <button onClick={() => startEditExpense(e)} style={{ background: "#dbeafe", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer", marginRight: 4 }}>✏️</button>
+                    <button onClick={() => deleteExpense(e._id)} style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "5px 9px", cursor: "pointer" }}>🗑️</button>
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>
