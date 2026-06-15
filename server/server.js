@@ -24,10 +24,26 @@ app.delete("/api/bikes/:id", async (req, res) => { try { await Bike.findByIdAndD
 
 app.get("/api/expenses", async (req, res) => { try { res.json(await Expense.find().sort({ _id: -1 })); } catch (err) { res.status(500).json({ error: err.message }); } });
 app.post("/api/expenses", async (req, res) => { try { await new Expense(req.body).save(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
+app.put("/api/expenses/:id", async (req, res) => {
+  try {
+    await Expense.findByIdAndUpdate(req.params.id, req.body);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.delete("/api/expenses/:id", async (req, res) => { try { await Expense.findByIdAndDelete(req.params.id); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
 
 app.get("/api/plates", async (req, res) => { try { res.json(await Plate.find().sort({ _id: -1 })); } catch (err) { res.status(500).json({ error: err.message }); } });
 app.post("/api/plates", async (req, res) => { try { await new Plate(req.body).save(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
+app.put("/api/plates/:id", async (req, res) => {
+  try {
+    await Plate.findByIdAndUpdate(req.params.id, req.body);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.delete("/api/plates/:id", async (req, res) => { try { await Plate.findByIdAndDelete(req.params.id); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
 
 app.get("/api/stats", async (req, res) => {
