@@ -180,15 +180,14 @@ function DashboardPage() {
   }, []);
   if (loading) return <div style={{ textAlign: "center", padding: 60, fontFamily: F.body, color: "#64748b" }}>Loading stats...</div>;
   if (!stats) return <div style={{ padding: 40, textAlign: "center", color: "#ef4444" }}>Could not load stats.</div>;
-  const cards = [
-    { label: "Total Investment", value: formatPKR(stats.totalInvestment), icon: "💰", color: "#3b82f6" },
+const cards = [
+    { label: "Total Purchase", value: formatPKR(stats.totalPurchase), icon: "🛒", color: "#3b82f6" },
     { label: "Total Sale", value: formatPKR(stats.totalSale), icon: "✅", color: "#10b981" },
     { label: "Total Expenses", value: formatPKR(stats.totalExpenses), icon: "💸", color: "#ef4444" },
     { label: "Bike Profit", value: formatPKR(stats.bikeProfit), icon: "📈", color: C.accent },
-    { label: "Plate Profit", value: formatPKR(stats.plateProfit), icon: "🏷️", color: "#8b5cf6" },
+    { label: "Registration Profit", value: formatPKR(stats.plateProfit), icon: "📋", color: "#8b5cf6" },
     { label: "Net Profit", value: formatPKR(stats.netProfit), icon: stats.netProfit >= 0 ? "🟢" : "🔴", color: stats.netProfit >= 0 ? "#10b981" : "#ef4444" },
   ];
-
   return (
     <div style={{ padding: "32px 40px", maxWidth: 1400, margin: "0 auto", fontFamily: F.body }}>
       <h1 style={{ fontFamily: F.heading, fontSize: 28, color: C.primary, marginBottom: 4, marginTop: 0 }}>📊 Dashboard</h1>
@@ -206,10 +205,10 @@ function DashboardPage() {
         <h3 style={{ fontFamily: F.heading, marginTop: 0, marginBottom: 16, color: C.primary }}>Profit Summary</h3>
         {[
           ["Total Sale", formatPKR(stats.totalSale), "#10b981", false],
-          ["Total Purchase (Investment)", `- ${formatPKR(stats.totalPurchase)}`, "#ef4444", false],
-          ["Total Expenses", `- ${formatPKR(stats.totalExpenses)}`, "#ef4444", false],
-          ["Plate Profit", `+ ${formatPKR(stats.plateProfit)}`, "#10b981", false],
-          ["NET PROFIT", formatPKR(stats.netProfit), stats.netProfit >= 0 ? "#10b981" : "#ef4444", true],
+["Total Purchase", `- ${formatPKR(stats.totalPurchase)}`, "#ef4444", false],
+["Total Expenses", `- ${formatPKR(stats.totalExpenses)}`, "#ef4444", false],
+["Registration Profit", `+ ${formatPKR(stats.plateProfit)}`, "#10b981", false],
+["NET PROFIT", formatPKR(stats.netProfit), stats.netProfit >= 0 ? "#10b981" : "#ef4444", true],
         ].map(([label, val, color, bold], i) => (
           <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: bold ? "none" : "1px solid #f1f5f9", fontSize: bold ? 17 : 14, fontWeight: bold ? 700 : 400, marginTop: bold ? 8 : 0 }}>
             <span>{label}</span><span style={{ color }}>{val}</span>
