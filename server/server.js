@@ -73,46 +73,29 @@ app.get("/api/stats", async (req, res) => {
     });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
-
 app.get("/api/bike-profits", async (req, res) => {
   try {
-    const records = await Bike.find();
+    const bikes = await Bike.find();
 
-    const purchases = records.filter(r => r.recordType === "purchase");
-    const sales = records.filter(r => r.recordType === "sale");
+    const purchases = bikes.filter(b => b.recordType === "purchase");
+    const sales = bikes.filter(b => b.recordType === "sale");
 
     const result = purchases.map(p => {
       const sale = sales.find(s => s.engineNumber === p.engineNumber);
 
       return {
-        bikeNumber: p.bikeNumber,
         bikeName: p.bikeName,
-        bikeModel: p.bikeModel,
-        cc: p.cc,
-        engineNumber: p.engineNumber,
-        chassisNumber: p.chassisNumber,
-
-        purchasePrice: p.totalPrice,
-        salePrice: sale ? sale.totalPrice : null,
-
-        totalExpenses: 0, // next step me add karenge
-
-        netProfit: sale
-          ? (sale.totalPrice - p.totalPrice)
-          : null,
-
         status: sale ? "Sold" : "In Stock",
-
-        purchaseDate: p.date,
-        saleDate: sale ? sale.date : null
+        profit: sale
+          ? (Number(sale.totalPrice) - Number(p.totalPrice))
+          : 0
       };
     });
 
     res.json(result);
 
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: err.message });
   }
 });
 const PORT = process.env.PORT || 8080;
