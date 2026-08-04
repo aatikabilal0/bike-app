@@ -177,12 +177,20 @@ function LoginPage({ onLogin }) {
 
 function DashboardPage() {
   const [stats, setStats] = useState(null);
+  const [profits, setProfits] = useState([]);
   const [loading, setLoading] = useState(true);
+  useEffect(() => {
+  fetch("https://bike-app-csct.onrender.com/api/bike-profits")
+    .then(res => res.json())
+    .then(data => setProfits(data))
+    .catch(err => console.log(err));
+}, []);
   useEffect(() => {
     fetch(`${API}/api/stats`).then(r => r.json()).then(data => { setStats(data); setLoading(false); }).catch(() => setLoading(false));
   }, []);
   if (loading) return <div style={{ textAlign: "center", padding: 60, fontFamily: F.body, color: "#64748b" }}>Loading stats...</div>;
   if (!stats) return <div style={{ padding: 40, textAlign: "center", color: "#ef4444" }}>Could not load stats.</div>;
+  
 const cards = [
     { label: "Total Purchase", value: formatPKR(stats.totalPurchase), icon: "🛒", color: "#3b82f6" },
     { label: "Total Sale", value: formatPKR(stats.totalSale), icon: "✅", color: "#10b981" },
@@ -255,6 +263,56 @@ const cards = [
           </table>
         </div>
       )}
+      {/* 👇 NEW SIMPLE BIKE PROFIT TABLE */}
+<div style={{ marginTop: 30 }}>
+  <h3 style={{ fontFamily: F.heading, color: C.primary }}>
+    Per Bike Profit (Simple)
+  </h3>
+
+  <table
+    style={{
+      width: "100%",
+      borderCollapse: "collapse",
+      background: "#fff",
+      borderRadius: 12,
+      overflow: "hidden",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+    }}
+  >
+    <thead>
+      <tr style={{ background: C.primary }}>
+        <th style={{ padding: 12, color: "#fff" }}>Bike Name</th>
+        <th style={{ padding: 12, color: "#fff" }}>Status</th>
+        <th style={{ padding: 12, color: "#fff" }}>Profit</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {profits.map((b, i) => (
+        <tr key={i} style={{ borderBottom: `1px solid ${C.light}` }}>
+          <td style={{ padding: 12 }}>{b.bikeName}</td>
+
+          <td style={{ padding: 12 }}>
+            <span style={{
+              color: b.status === "Sold" ? "#10b981" : "#f59e0b",
+              fontWeight: 600
+            }}>
+              {b.status}
+            </span>
+          </td>
+
+          <td style={{
+            padding: 12,
+            color: b.profit >= 0 ? "#10b981" : "#ef4444",
+            fontWeight: 700
+          }}>
+            {formatPKR(b.profit)}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
 
     </div>
   );
