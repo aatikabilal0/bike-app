@@ -6,7 +6,7 @@ fontLink.rel = "stylesheet";
 fontLink.href = "https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Josefin+Sans:wght@300;400;500;600;700&display=swap";
 document.head.appendChild(fontLink);
 
-const API = "https://bike-app-production-dcce.up.railway.app";
+const API = "https://bike-app-csct.onrender.com";
 const PASSWORD = "bikeshub2024";
 
 const formatPKR = (n) => "Rs. " + (n || 0).toLocaleString("en-PK");
