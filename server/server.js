@@ -74,5 +74,46 @@ app.get("/api/stats", async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.get("/api/bike-profits", async (req, res) => {
+  try {
+    const records = await Bike.find();
+
+    const purchases = records.filter(r => r.recordType === "purchase");
+    const sales = records.filter(r => r.recordType === "sale");
+
+    const result = purchases.map(p => {
+      const sale = sales.find(s => s.engineNumber === p.engineNumber);
+
+      return {
+        bikeNumber: p.bikeNumber,
+        bikeName: p.bikeName,
+        bikeModel: p.bikeModel,
+        cc: p.cc,
+        engineNumber: p.engineNumber,
+        chassisNumber: p.chassisNumber,
+
+        purchasePrice: p.totalPrice,
+        salePrice: sale ? sale.totalPrice : null,
+
+        totalExpenses: 0, // next step me add karenge
+
+        netProfit: sale
+          ? (sale.totalPrice - p.totalPrice)
+          : null,
+
+        status: sale ? "Sold" : "In Stock",
+
+        purchaseDate: p.date,
+        saleDate: sale ? sale.date : null
+      };
+    });
+
+    res.json(result);
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log("Server running on", PORT));
